@@ -400,7 +400,9 @@ function inregistry_GetDomainInformation($params)
         $currentstatus = "active";
     }
 
-    $hasidprotect = $hasdnsmanagement = $hasemailforwarding = false;
+    $hasidprotect = ($params['idprotection'] ?? false);
+    $hasdnsmanagement = ($params['dnsmanagement'] ?? false);
+    $hasemailforwarding = ($params['emailforwarding'] ?? false);
 
     $isIcannTld = false; //country-code so false ?? if generic then true
 
@@ -413,7 +415,7 @@ function inregistry_GetDomainInformation($params)
         $irtpOptOut = false;
     }
 
-    $expirydate = date("Y-m-d", $response['exDate']);
+    $expirydate = WHMCS\Carbon::createFromFormat('Y-m-d', date("Y-m-d", $response['exDate']));
     $irtpLock = strtotime($response['crDate']) < (time() - (60 * 24 * 60 * 60)); //sixtydaylock
 
     return (new WHMCS\Domain\Registrar\Domain())
