@@ -1,7 +1,7 @@
 # .IN Registry WHMCS Module Installation instructions
 
 This is Unofficially .in domain name registry WHMCS module
-EPP: RFC 5730, 5731, 5732, 5733, 5734, 5910
+(EPP: RFC 5730, 5731, 5732, 5733, 5734, 5910)
 
 1. Download and install [WHMCS](https://whmcs.com/)
 
