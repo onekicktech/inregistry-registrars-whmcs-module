@@ -1,0 +1,29 @@
+{
+  "schema": "1.0",
+  "type": "whmcs-registrars",
+  "name": "inregistry",
+  "license": "proprietary",
+  "category": "domains",
+  "description": {
+    "name": "IN Registry",
+    "tagline": "Unofficially .in domain name registry WHMCS module.",
+    "features": [
+      "Automated Domain Registrations, Transfers & Renewals",
+      "Ability to View/Change Nameservers & WHOIS Info",
+      "Domain Locking, ID Protection, EPP Code Retrieval",
+      "Register/Manage Private Nameservers"
+    ]
+  },
+  "logo": {
+    "filename": "logo.gif"
+  },
+  "support": {
+    "docs_url": "https:\/\/www.registry.in\/"
+  },
+  "authors": [
+    {
+      "name": "IN Registry",
+      "homepage": "https:\/\/www.registry.in\/"
+    }
+  ]
+}
