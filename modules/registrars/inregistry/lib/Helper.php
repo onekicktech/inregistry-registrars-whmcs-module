@@ -40,6 +40,23 @@ function ok_epp_arr2arr(array $arr)
     return $array;
 }
 
+function ok_epp_pr($data, $type = 0)
+{
+    if (is_array($data) || is_object($data)) {
+        echo '<pre>';
+        print_r($data);
+        echo '</pre>';
+    } else {
+        echo $data;
+    }
+
+    if ($type != 0) {
+        exit();
+    } else {
+        echo '<hr>';
+    }
+}
+
 function ok_epp_xml2array($contents, $get_attributes = 1, $priority = "tag")
 {
     $type = $tag = "";
@@ -151,8 +168,10 @@ function ok_epp_simple_ArrStrTag($data, $inTag = null, $func = false)
     if (empty($data)) {
     } elseif (is_array($data) && count($data) > 0) {
         foreach ($data as $v) {
-            $fv = $func === false ? htmlspecialchars($v) : htmlspecialchars($func($v));
-            $return .= $inTag === null ? $fv : '<' . $inTag . '>' . $fv . '</' . $inTag . '>';
+            if (!empty($v)) {
+                $fv = $func === false ? htmlspecialchars($v) : htmlspecialchars($func($v));
+                $return .= $inTag === null ? $fv : '<' . $inTag . '>' . $fv . '</' . $inTag . '>';
+            }
         }
     } else {
         $fv = $func === false ? htmlspecialchars($data) : htmlspecialchars($func($data));
@@ -228,11 +247,11 @@ function ok_epp_indexToName($data, string $idKeyName, string $idParam = "id"): a
     }
 }
 
-function ok_epp_generateRandomString()
+function ok_epp_generateRandomString($length = 12)
 {
     $characters = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';
     $randomString = '';
-    for ($i = 0; $i < 12; $i++) {
+    for ($i = 0; $i < $length; $i++) {
         $randomString .= $characters[rand(0, strlen($characters) - 1)];
     }
     return $randomString;
@@ -402,15 +421,12 @@ function ok_epp_RegisterDomain(array $config, string $domainName, array $nss)
             'billing',
         ];
 
-        $cids = [];
-        foreach ($contents as $i => $contactType) {
-            $cid = [$contactType => strtoupper($config['identityprefix'] . '-' . substr($contactType, 0, 4) . '' . $config['domainid'])];
-            $ckContact = $con->contactCheck($cid[$contactType]);
-            if ($ckContact['contact'][0]['avail'] == 1) {
-                $con->contactCreate($cid[$contactType], $config);
-            }
+        $unqContactId = ok_epp_generateUniqueContactId($con, $config['identityprefix'], $config['domainid']);
+        $crContact = $con->contactCreate($unqContactId, $config);
 
-            $cids = array_merge($cids, $cid);
+        $cids = [];
+        foreach ($contents as $contactType) {
+            $cids[$contactType] = $unqContactId;
         }
 
         //nameserver host check
@@ -438,6 +454,17 @@ function ok_epp_RegisterDomain(array $config, string $domainName, array $nss)
     }
 
     return $return;
+}
+
+function ok_epp_generateUniqueContactId($eppCon, $identityprefix, $dId)
+{
+    $unqContactId = strtoupper($identityprefix . '_' . ok_epp_generateRandomString(4) . '' . $dId);
+    $cci = $eppCon->contactCheck($unqContactId);
+    if ($cci['contact'][0]['avail'] == 1) {
+        return $unqContactId;
+    } else {
+        return ok_epp_generateUniqueContactId($eppCon, $identityprefix, $dId);
+    }
 }
 
 function ok_epp_TransferDomain(array $config, string $domainName, string $transferSecret)
@@ -546,7 +573,7 @@ function ok_epp_SaveContactDetails(array $config, string $domainName)
 
                 unset($ccvvvAsign[$cdkey]);
                 if (in_array($cdvalue, $ccvvvAsign)) {
-                    $cdkvCI = ok_epp_generateRandomString();
+                    $cdkvCI = ok_epp_generateUniqueContactId($con, $config['identityprefix'], $config['domainid']);
                     $ccvvvAsign[$cdkey] = $cdkvCI;
                     $crCC = $con->contactCreate($cdkvCI, $params);
                     if ($crCC['contact']['success']) {
