@@ -319,7 +319,8 @@ function inregistry_TransferSync(array $params)
 function inregistry_AdminCustomButtonArray()
 {
     $buttonarray = [];
-    $params = get_query_vals("tbldomains", "", ["id" => $_REQUEST["id"] ?? null]);
+    $domainId = $_REQUEST['domainid'] ?? $_REQUEST["id"];
+    $params = get_query_vals("tbldomains", "", ["id" => $domainId ?? null]);
     if (is_array($params) && $params["type"] == "Transfer" && $params["status"] === "Pending Transfer") {
         $buttonarray["Cancel Domain Transfer"] = "canceldomaintransfer";
     }
@@ -347,7 +348,11 @@ function inregistry_canceldomaintransfer(array $params)
     }
 
     $domainName = !empty($params['domainObj']) ? inregistry_getDomainName($params['domainObj']) : inregistry_getDomainName($params['domainname']);
-    return ok_epp_cancelDomainTransfer($params, $domainName);
+    $ck = ok_epp_cancelDomainTransfer($params, $domainName);
+    if (!isset($ck['error']) && !empty($params["domainid"])) {
+        update_query("tbldomains", ["status" => "Cancelled"], ["id" => $params["domainid"]]);
+    }
+    return $ck;
 }
 
 // Disclose element not supported on .IN Registrar
@@ -392,7 +397,7 @@ function inregistry_GetDomainInformation($params)
 
     if (empty($response['authInfo'])) {
         $currentstatus = "deleted";
-    } elseif (in_array("inactive", $response["status"])) {
+    } elseif (in_array("inactive", $response["status"]) || in_array("pendingtransfer", $response["status"])) {
         $currentstatus = "inactive";
     } elseif (in_array("pendingDelete", $response["status"])) {
         $currentstatus = "pendingDelete";

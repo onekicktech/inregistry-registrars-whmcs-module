@@ -84,10 +84,10 @@ class EppClient
         $to[] = '<clID>' . htmlspecialchars($usr) . '</clID>';
 
         $from[] = '/{{ pw }}/';
-        $to[] = '<pw>' . htmlspecialchars($pwd) . '</pw>';
+        $to[] = '<pw>' . ok_epp_htmlspecialchars($pwd) . '</pw>';
 
         $from[] = '/{{ newPW }}/';
-        $to[] = $newPwd === null ? '' : '<newPW>' . htmlspecialchars($newPwd) . '</newPW>';
+        $to[] = $newPwd === null ? '' : '<newPW>' . ok_epp_htmlspecialchars($newPwd) . '</newPW>';
 
 
         $from[] = '/{{ clTRID }}/';
@@ -191,12 +191,12 @@ class EppClient
         if (fwrite($this->socket, pack('N', (strlen($xml) + 4)) . $xml) === false) {
             throw new exception('Error writing to the connection.');
         }
-        $r = ok_epp_xml2array($this->read($action));
-
+        $response = $this->read($action);
         if (function_exists(("ok_epp_modulelog"))) {
-            ok_epp_modulelog($xml, $r, $action);
+            ok_epp_modulelog($xml, $response, $action);
         }
-
+        
+        $r = ok_epp_xml2array($response);
         if (isset($r['epp']['response']['result_attr']) && ($r['epp']['response']['result_attr']['code'] >= 2000)) {
             throw new exception($r['epp']['response']['result']['msg'] . ': ' . $r['epp']['response']['result']['extValue']['reason']);
         }
@@ -540,7 +540,7 @@ class EppClient
             $to[] = '<domain:period unit="y">' . $periodYr . '</domain:period>';
 
             $from[] = '/{{ authInfo }}/';
-            $to[] = !empty($authInfo) ? '<domain:authInfo><domain:pw>' . htmlspecialchars($authInfo) . '</domain:pw></domain:authInfo>' : "";
+            $to[] = !empty($authInfo) ? '<domain:authInfo><domain:pw>' . ok_epp_htmlspecialchars($authInfo) . '</domain:pw></domain:authInfo>' : "";
         } else {
             $from[] = '/{{ periodYr }}/';
             $to[] = "";
@@ -821,7 +821,7 @@ class EppClient
 
         $from[] = '/{{ authInfo }}/';
         // $authInfo = ($authInfo === null ? '' : '<domain:authInfo><domain:pw><![CDATA['.htmlspecialchars($authInfo).']]></domain:pw></domain:authInfo>');
-        $authInfo = ($authInfo === null ? '' : '<authInfo><pw>' . htmlspecialchars($authInfo) . '</pw></authInfo>');
+        $authInfo = ($authInfo === null ? '' : '<authInfo><pw>' . ok_epp_htmlspecialchars($authInfo) . '</pw></authInfo>');
         $to[] = $authInfo;
 
         $from[] = '/{{ clTRID }}/';
@@ -1092,7 +1092,7 @@ class EppClient
         $to[] = htmlspecialchars($domainName);
 
         $from[] = '/{{ authInfo }}/';
-        $to[] = htmlspecialchars($authInfo);
+        $to[] = ok_epp_htmlspecialchars($authInfo);
 
         $from[] = '/{{ clTRID }}/';
         $clTRID = str_replace('.', '', round(microtime(1), 3));
