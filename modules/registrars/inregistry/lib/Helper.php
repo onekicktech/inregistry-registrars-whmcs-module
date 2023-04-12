@@ -227,6 +227,12 @@ function ok_epp_generateObjectPW($objType = 'none')
     return $result;
 }
 
+// prevent double encoding (&)
+function ok_epp_htmlspecialchars($str)
+{
+    return htmlspecialchars(htmlspecialchars_decode($str));
+}
+
 function ok_epp_indexToName($data, string $idKeyName, string $idParam = "id"): array
 {
     if (!empty($data) && count($data) > 0) {
@@ -444,6 +450,8 @@ function ok_epp_RegisterDomain(array $config, string $domainName, array $nss)
         $periodYr = is_numeric($config['regperiod']) ? $config['regperiod'] : 1;
 
         $doCreate = $con->domainCreate($domainName, $periodYr, $cids, $nss);
+        $con->domainUpdateStatus($domainName, 'clientTransferProhibited', 'add');
+
         $return = ["success" => $doCreate['domain']['success']];
     } catch (exception $e) {
         $return = ["error" => $e->getMessage()];
