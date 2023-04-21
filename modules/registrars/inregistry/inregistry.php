@@ -355,27 +355,27 @@ function inregistry_canceldomaintransfer(array $params)
     return $ck;
 }
 
-// Disclose element not supported on .IN Registrar
-function inregistry_IDProtectToggle(array $params)
-{
-    $params = injectDomainObjectIfNecessary($params);
-    if (empty($params['domainObj']) && empty($params['domainname'])) {
-        return ["error" => "Empty Domain Name"];
-    }
+// // Disclose element not supported on .IN Registrar
+// function inregistry_IDProtectToggle(array $params)
+// {
+//     $params = injectDomainObjectIfNecessary($params);
+//     if (empty($params['domainObj']) && empty($params['domainname'])) {
+//         return ["error" => "Empty Domain Name"];
+//     }
 
-    if (empty($params["domainid"])) {
-        return ["error" => "Empty Domain Id"];
-    }
+//     if (empty($params["domainid"])) {
+//         return ["error" => "Empty Domain Id"];
+//     }
 
-    $domainName = !empty($params['domainObj']) ? inregistry_getDomainName($params['domainObj']) : inregistry_getDomainName($params['domainname']);
-    $idprotect = ($params['protectenable'] ? 1 : 0);
+//     $domainName = !empty($params['domainObj']) ? inregistry_getDomainName($params['domainObj']) : inregistry_getDomainName($params['domainname']);
+//     $idprotect = ($params['protectenable'] ? 1 : 0);
 
-    $domUp = ok_epp_IDProtectToggle($params, $domainName, $idprotect);
-    if (isset($domUp['success'])) {
-        update_query("tbldomains", ["idprotection" => $idprotect], ["id" => $params["domainid"]]);
-    }
-    return $domUp;
-}
+//     $domUp = ok_epp_IDProtectToggle($params, $domainName, $idprotect);
+//     if (isset($domUp['success'])) {
+//         update_query("tbldomains", ["idprotection" => $idprotect], ["id" => $params["domainid"]]);
+//     }
+//     return $domUp;
+// }
 
 // Called when a domain is viewed within WHMCS. Recommended instead of GetNameservers and GetRegistrarLock in WHMCS 7.6 and later.
 function inregistry_GetDomainInformation($params)
@@ -395,9 +395,7 @@ function inregistry_GetDomainInformation($params)
         $nameservers["ns{$i}"] = $ns;
     }
 
-    if (empty($response['authInfo'])) {
-        $currentstatus = "deleted";
-    } elseif (in_array("inactive", $response["status"]) || in_array("pendingtransfer", $response["status"])) {
+    if (in_array("inactive", $response["status"]) || in_array("pendingtransfer", $response["status"])) {
         $currentstatus = "inactive";
     } elseif (in_array("pendingDelete", $response["status"])) {
         $currentstatus = "pendingDelete";
@@ -413,15 +411,12 @@ function inregistry_GetDomainInformation($params)
 
     $transferLock = in_array('clientTransferProhibited', $response['status']) ? true : false;
 
-    $irtpOptOut = true;
-    $triggerFields = [];
-    if (!array_key_exists("DesignatedAgent", $params) || !$params["DesignatedAgent"]) {
-        $triggerFields = ["Registrant" => ["Full Name", "Company Name", "Email"]];
-        $irtpOptOut = false;
-    }
-
-    $expirydate = WHMCS\Carbon::createFromFormat('Y-m-d', date("Y-m-d", $response['exDate']));
+    $expirydate = WHMCS\Carbon::createFromFormat('Y-m-d', date("Y-m-d", strtotime($response['exDate'])));
     $irtpLock = strtotime($response['crDate']) < (time() - (60 * 24 * 60 * 60)); //sixtydaylock
+
+    $triggerFields = []; // ["Registrant" => ["Full Name", "Company Name", "Email"]];
+    $irtpOptOut = false;
+    $registrantEmail = null;
 
     return (new WHMCS\Domain\Registrar\Domain())
         ->setDomain($response['name'])
@@ -442,7 +437,7 @@ function inregistry_GetDomainInformation($params)
         ->setPendingSuspension(false) // raaVerificationStartTime
         ->setDomainContactChangeExpiryDate(null) //
 
-        ->setRegistrantEmailAddress($response['registrant']['email'])
+        ->setRegistrantEmailAddress($registrantEmail)
         ->setIrtpVerificationTriggerFields($triggerFields);
 }
 

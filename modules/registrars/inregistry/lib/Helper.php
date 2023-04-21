@@ -377,7 +377,7 @@ function ok_epp_SaveRegistrarLock(array $config, string $domainName, $lockenable
     try {
         $status = [
             //'clientUpdateProhibited',
-            'clientDeleteProhibited',
+            //'clientDeleteProhibited',
             'clientTransferProhibited',
         ];
 
@@ -776,9 +776,6 @@ function ok_epp_SyncDomain(array $config, string $domainName)
 
     try {
         $dInfo = $con->domainInfo($domainName);
-        if (empty($dInfo['domain']['authInfo'])) {
-            return ["transferredAway" => true];
-        }
 
         $expDate = $dInfo['domain']['exDate'];
         if (empty($expDate)) {
@@ -902,8 +899,6 @@ function ok_epp_GetDomainInformation(array $config, string $domainName)
 
     try {
         $dInfo = $con->domainInfo($domainName);
-        $cInfo = $con->contactInfo($dInfo['domain']['registrant']);
-        $dInfo['domain']['registrant'] = $cInfo['contact'];
         $return = $dInfo['domain'];
     } catch (exception $e) {
         $return = ["error" => $e->getMessage()];

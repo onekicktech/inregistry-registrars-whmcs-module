@@ -884,7 +884,7 @@ class EppClient
         $result = [
             "name" => $dList['domain:name'],
             "roid" => $dList['domain:roid'],
-            "status" => $dStatus,
+            "status" => is_string($dStatus) ? [$dStatus] : $dStatus,
             "registrant" => $dList['domain:registrant'],
             "contact" => [
                 $dList['domain:contact']["0_attr"]["type"] => $dList['domain:contact']["0"],
