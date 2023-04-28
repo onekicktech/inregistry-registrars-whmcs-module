@@ -832,6 +832,14 @@ function ok_epp_TransferDomainSync(array $config, string $domainName)
                 ];
                 break;
         }
+
+        if ($return['completed'] === true) {
+            $newContactId = ok_epp_generateUniqueContactId($con, $config['identityprefix'], $config['domainid']);
+            $crCC = $con->contactCreate($newContactId, $config);
+            if ($crCC['contact']['success']) {
+                $con->domainTransferUpdate($domainName, $newContactId);
+            }
+        }
     } catch (exception $e) {
         $return = ["error" => $e->getMessage()];
     }

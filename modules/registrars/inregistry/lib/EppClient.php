@@ -195,7 +195,7 @@ class EppClient
         if (function_exists(("ok_epp_modulelog"))) {
             ok_epp_modulelog($xml, $response, $action);
         }
-        
+
         $r = ok_epp_xml2array($response);
         if (isset($r['epp']['response']['result_attr']) && ($r['epp']['response']['result_attr']['code'] >= 2000)) {
             throw new exception($r['epp']['response']['result']['msg'] . ': ' . $r['epp']['response']['result']['extValue']['reason']);
@@ -964,6 +964,86 @@ class EppClient
         return $return;
     }
 
+    public function domainTransferUpdate($domainName, $newContactId)
+    {
+        $chgXML = $addXML = $remXML = "";
+
+        $dInfo = $this->domainInfo($domainName);
+        if (in_array('pendingTransfer', $dInfo['domain']['status'])) {
+            throw new exception('Invalid Request');
+        }
+
+        // start tag
+        $chgXML .= '<domain:chg>' . "\n";
+        $addXML .= '<domain:add>' . "\n";
+        $remXML .= '<domain:rem>' . "\n";
+
+
+        // contact update
+        $chgXML .= '<domain:registrant>' . htmlspecialchars($newContactId) . '</domain:registrant>' . "\n";
+        foreach ($dInfo['domain']['contact'] as $contactType => $oldContactId) {
+            $addXML .= '<domain:contact type="' . htmlspecialchars($contactType) . '">' . htmlspecialchars($newContactId) . '</domain:contact>' . "\n";
+            $remXML .= '<domain:contact type="' . htmlspecialchars($contactType) . '">' . htmlspecialchars($oldContactId) . '</domain:contact>' . "\n";
+        }
+
+        if (in_array('ok', $dInfo['domain']['status'])) {
+            // Registrar trasfer Lock Update
+            $addXML .= '<domain:status s="clientTransferProhibited"></domain:status>' . "\n";
+        }
+
+        // Password (AuthInfo) Update
+        $chgXML .= '<domain:authInfo><domain:pw>' . htmlspecialchars(ok_epp_generateObjectPW()) . '</domain:pw></domain:authInfo>' . "\n";
+
+
+        // end tag
+        $chgXML .= '</domain:chg>' . "\n";
+        $addXML .= '</domain:add>' . "\n";
+        $remXML .= '</domain:rem>' . "\n";
+
+
+        $from = $to = [];
+        $from[] = '/{{ name }}/';
+        $to[] = htmlspecialchars($domainName);
+
+        $from[] = '/{{ add }}/';
+        $to[] = $addXML;
+        $from[] = '/{{ rem }}/';
+        $to[] = $remXML;
+        $from[] = '/{{ chg }}/';
+        $to[] = $chgXML;
+
+        $from[] = '/{{ clTRID }}/';
+        $clTRID = str_replace('.', '', round(microtime(1), 3));
+        $to[] = htmlspecialchars($this->getConfig("identityprefix") . '-domain-domainTransferUpdate-' . $clTRID);
+        $xml = preg_replace($from, $to, '<command>
+   <update>
+     <domain:update
+		   xmlns:domain="urn:ietf:params:xml:ns:domain-1.0"
+		   xsi:schemaLocation="urn:ietf:params:xml:ns:domain-1.0 domain-1.0.xsd">
+       <domain:name>{{ name }}</domain:name>
+       {{ add }}
+       {{ rem }}
+       {{ chg }}
+     </domain:update>
+   </update>
+   <clTRID>{{ clTRID }}</clTRID>
+ </command>');
+
+        $r = $this->_write($xml, __FUNCTION__);
+        $return = [
+            "code" => $r['result_attr']['code'],
+            "msg" => $r['result']['msg'],
+            "lang" => $r['result']['msg_attr']['lang'],
+            "domain" => [
+                "success" => true,
+                "name" => $domainName,
+                "msg" => "Domain Contact Updated"
+            ]
+
+        ];
+        return $return;
+    }
+
     public function domainUpdateContact($domainName, $contactType, $newContactId = null, $oldContactId = null)
     {
         if (!is_string($domainName)) {
@@ -977,8 +1057,8 @@ class EppClient
         if ($contactType === 'registrant') {
             $chgXML = '<domain:chg><domain:registrant>' . htmlspecialchars($newContactId) . '</domain:registrant></domain:chg>';
         } else {
-            $addXML = $newContactId === null ? '' : '<domain:add><domain:contact type="' . htmlspecialchars($contactType) . '"> ' . htmlspecialchars($newContactId) . '</domain:contact></domain:add>';
-            $remXML = $oldContactId === null ? '' : '<domain:rem><domain:contact type="' . htmlspecialchars($contactType) . '"> ' . htmlspecialchars($oldContactId) . '</domain:contact></domain:rem>';
+            $addXML = $newContactId === null ? '' : '<domain:add><domain:contact type="' . htmlspecialchars($contactType) . '">' . htmlspecialchars($newContactId) . '</domain:contact></domain:add>';
+            $remXML = $oldContactId === null ? '' : '<domain:rem><domain:contact type="' . htmlspecialchars($contactType) . '">' . htmlspecialchars($oldContactId) . '</domain:contact></domain:rem>';
         }
 
         $from = $to = [];
