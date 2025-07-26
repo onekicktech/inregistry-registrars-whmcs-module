@@ -22,7 +22,7 @@ require_once __DIR__ . '/EppClient.php';
 function ok_epp_buildConfig(array $config)
 {
     return [
-        "host" => !empty($config["TestMode"]) ? "epp.ote.registry.in" : "epp.registry.in",
+        "host" => !empty($config["TestMode"]) ? "epp.ote.nixiregistry.in" : "epp.nixiregistry.in",
         "port" => 700, // System port number 700 has been assigned by the IANA for mapping EPP onto TCP
         'local_cert' => $config['local_cert'],
         'local_pk' => $config['local_pk'],

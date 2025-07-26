@@ -13,5 +13,21 @@ This is Unofficially .in domain name registry WHMCS module
 
 5. Add a new TLD using Configuration -> System Settings -> Domain Pricing
 
+---
 
-You should be good to go now.
+## Registry Connection Details
+
+- **EPP Server (TCP 700):** epp.nixiregistry.in  
+- **Registrar Console:** https://console.nixiregistry.in  
+- **WHOIS (TCP 43):** whois.nixiregistry.in/  
+- **WHOIS Web:** https://whois.nixiregistry.in/  
+- **RDAP:** rdap.nixiregistry.in/  
+- **OT&E EPP Server (TCP 700):** epp.ote.nixiregistry.in  
+- **OT&E Registrar Console:** https://console.ote.nixiregistry.in  
+- **OT&E WHOIS:** https://whois.ote.nixiregistry.in/  
+
+**Status:** https://www.tucowsregistrystatus.com/
+
+If you are unable to locate these credentials or are having trouble accessing the OT&E, please reply to this email or reach out to [transitionsupport@nixi.in](mailto:transitionsupport@nixi.in).
+
+You should be good to go
