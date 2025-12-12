@@ -719,7 +719,7 @@ class EppClient
 	<clTRID>{{ clTRID }}</clTRID>
   </command>');
 
-        return $r = $this->_write($xml, __FUNCTION__);
+        $r = $this->_write($xml, __FUNCTION__);
         $return = [
             "code" => $r['result_attr']['code'],
             "msg" => $r['result']['msg'],
@@ -2240,7 +2240,7 @@ class EppClient
        <clTRID>{{ clTRID }}</clTRID>
      </command>');
 
-        return $r = $this->_write($xml, __FUNCTION__);
+        $r = $this->_write($xml, __FUNCTION__);
 
         $return = [
             "code" => $r['result_attr']['code'],

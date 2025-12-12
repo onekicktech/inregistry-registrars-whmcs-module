@@ -858,11 +858,6 @@ function ok_epp_cancelDomainTransfer(array $config, string $domainName)
         return (array) $con;
     }
 
-    $con = ok_epp_startEppClient($config);
-    if (!empty($con->error)) {
-        return (array) $con;
-    }
-
     try {
         $con->domainTransfer($domainName, "cancel");
         $return = ["message" => "Successfully cancelled the domain transfer"];
